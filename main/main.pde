@@ -1,36 +1,42 @@
-
-int leftPlayerY = 100;
-int leftPlayerX = 100;
-final int playerWidth = 10;
-final int playerHeight = 70;
-
 final int screenX = 1000;
 final int screenY = 600;
 int ballX = screenX;
 int ballY = 500;
 int ballSize = 10;
 
-boolean isAttacking = true;
+final int playerWidth = 10;
+final int playerHeight = 70;
+int leftPlayerY = screenY/2 - playerHeight/2;
+int leftPlayerX = 100;
 
+int playerPadding = 100;
+
+boolean movingLeft = true;
+
+Player1 player1;
+Player player2;
 
 void setup() {
   frameRate(100);
   pixelDensity(2);
   size(1000, 600);
+  
+  player1 = new Player1();
+  player2 = new Player2();
 }
 
 void moveBallX(){
   int limit = screenX - 10;
-  if (isAttacking)
+  if (movingLeft)
     ballX-=5;
   else
     ballX+=5;
   
-  if(isAttacking && ballX < 10)
-    isAttacking = false;
+  if(movingLeft && ballX < 10)
+    movingLeft = false;
     
-  if (!isAttacking && ballX > limit)
-    isAttacking = true;
+  if (!movingLeft && ballX > limit)
+    movingLeft = true;
 }
 
 boolean isMovingUP = true;
@@ -48,42 +54,117 @@ void moveBallY() {
     isMovingUP = true;
 }
 
-void detectCollision() {
-  if (ballX <= (leftPlayerX + playerWidth/2)
-      && ballX > (leftPlayerX - playerWidth/2)
-      && ballY - (ballSize/2) < (leftPlayerY+ playerHeight/2)
-      && ballY + (ballSize/2) > (leftPlayerY - playerHeight/2)) {
-    isAttacking = false;
+void invertBallDirectionY () {
+  movingLeft = !movingLeft;
+}
+
+abstract class Player {
+  int x;
+  int y;
+  int width;
+  int height;
+  
+  Player(){
+    width=10;
+    height=70;
+  }
+
+  abstract boolean upKeyCodePressed();
+  abstract boolean downKeyCodePressed();
+  
+  int getTopY () {
+    return (y - height/2);
+  }
+  
+  int getBottomY () {
+    return (y + height/2);
+  }
+  
+  void moveUP() {
+    y -= 5;
+  }
+  
+  void moveDown() {
+    y += 5;
+  }
+  
+  void detectControl() {
+    if (keyPressed == true) {
+      if (upKeyCodePressed() && getTopY() > 0) {
+        moveUP();
+      }
+     
+      if (downKeyCodePressed() && getBottomY() < screenY) {
+        moveDown();
+      }
+    }
+  }
+  
+  void display() {
+    rectMode(CENTER);
+    rect(x, y, width, height);
+    
+    detectControl();
+    
+    if (detectCollision()) {
+      invertBallDirectionY();
+    }
+  }
+  
+  boolean detectCollision() {
+    return (ballX <= (x + width/2) 
+            && ballX > (x - width/2)
+            && ballY - (ballSize/2) > getTopY() 
+            && ballY + (ballSize/2) < getBottomY() );
+  }
+}
+
+class Player1 extends Player {
+  Player1() {
+    super();
+    x = playerPadding;
+  }
+  
+  boolean upKeyCodePressed() {
+    return (key == 'q');
+  }
+  
+  boolean downKeyCodePressed() {
+    return (key == 'a');
+  }
+}
+
+class Player2 extends Player {
+  Player2() {
+    super();
+    x = screenX-playerPadding;
+  }
+  
+  boolean upKeyCodePressed() {
+    return (key == 'p');
+  }
+  
+  boolean downKeyCodePressed() {
+    return (key == 'l');
   }
 }
 
 void draw() {
-  
   background(0, 100, 0);
   strokeWeight(1);
   
-  //player
-  rectMode(CENTER);
-  rect(100, leftPlayerY, 10, 70);
+  //players
+  player1.display();
+  player2.display();
   
   //ball
   moveBallX();
   moveBallY();
-  detectCollision();
   rectMode(CENTER);
   rect(ballX, ballY, ballSize, ballSize);
   
+  //line
   strokeWeight(4);
   line(screenX/2,0,screenX/2,screenY);
   stroke(255);
-  
-  if (keyPressed == true) {
-     if (keyCode == UP && leftPlayerY > 0) {
-       leftPlayerY-=5;
-     }
-     
-     if (keyCode == DOWN && leftPlayerY < screenY) {
-      leftPlayerY+=5;
-    }
-  }
 }
