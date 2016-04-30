@@ -20,7 +20,7 @@ void setup() {
   frameRate(100);
   pixelDensity(2);
   size(1000, 600);
-  textSize(30);
+  textSize(25);
   
   player1 = new Player1();
   player2 = new Player2();
